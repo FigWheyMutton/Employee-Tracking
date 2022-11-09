@@ -1,7 +1,7 @@
-SELECT department.id, role.id
-FROM role
-JOIN department ON role.department_id = department.id;
+SELECT departments.id, roles.id
+FROM roles
+JOIN departments ON roles.department_id = departments.id;
 
-SELECT employee.role_id, role.id
-FROM employee
-JOIN role ON employee.role_id = role.id
+SELECT employees.role_id, roles.id
+FROM employees
+JOIN roles ON employees.role_id = roles.id

@@ -3,7 +3,7 @@ CREATE DATABASE tracking_db;
 
 USE tracking_db;
 
-CREATE TABLE department (
+CREATE TABLE departments (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(30)
 );
@@ -13,16 +13,18 @@ CREATE TABLE roles (
     title VARCHAR(30),
     salary DECIMAL,
     department_id INT,
-    FOREIGN KEY department
-    REFERENCES department(id)
+    FOREIGN KEY (department_id)
+    REFERENCES departments(id)
 );
 
-CREATE TABLE employee (
-    id INT PRIMARY KEY,
+CREATE TABLE employees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(30),
     last_name VARCHAR(30),
     role_id INT,
     manager_id INT,
-    FOREIGN KEY roles
-    REFERENCES role(id)
+    FOREIGN KEY (role_id)
+    REFERENCES roles(id),
+    FOREIGN KEY (manager_id)
+    REFERENCES employees(id)
 )
