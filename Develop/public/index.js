@@ -1,14 +1,14 @@
 const inquirer = require('inquirer')
 const mysql = require('mysql2')
-const employees = ['Alex Hsieh', 'An Tran', 'Hoonigan Lee', 'Duncan Gonzalez']
-const roles = ['Customer Service', 'Engineer', 'Manager', 'HR', 'FireFighter']
-const departments = ['Engineering', 'Finance', 'Legal', 'Sales']
-runPrgm()
+// const employees = ['Alex Hsieh', 'An Tran', 'Hoonigan Lee', 'Duncan Gonzalez']
+// const roles = ['Customer Service', 'Engineer', 'Manager', 'HR', 'FireFighter']
+// const departments = ['Engineering', 'Finance', 'Legal', 'Sales']
+
 
 var db = mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "Westminister69420",
+    password: "",
     database: "tracking_db"
     }, 
     console.log('Connected to the tracking database') 
@@ -49,11 +49,11 @@ function runPrgm() {
 
 
 function viewEmp() {
-    db.query(`SELECT emp.id, emp.first_name, emp.last_name, title, salary, CONCAT(mgr.first_name, '', mgr.last_name) AS manager
-        FROM employee emp
-        LEFT JOIN employee mgr ON mgr.id = emp.manager_id
-        LEFT JOIN role ON emp.role_id = role.id
-        LEFT JOIN department ON role.department_id = department.id;`, function(err, results) {
+    db.query(`SELECT emp.id, emp.first_name, emp.last_name, title, salary, CONCAT(mgr.first_name, ' ', mgr.last_name) AS manager
+        FROM employees emp
+        LEFT JOIN employees mgr ON mgr.id = emp.manager_id
+        LEFT JOIN roles ON emp.role_id = roles.id
+        LEFT JOIN departments ON roles.department_id = departments.id;`, function(err, results) {
         if (err) {
             console.log(err)
             return
@@ -139,7 +139,26 @@ function viewRoles() {
         }})
 }
 
-function addRole() {
+function loadDepartments() {
+    return db.promise().query('SELECT * FROM departments');
+}
+
+async function addRole() {
+    const [rows] = await loadDepartments();
+    // const departments = await loadDepartments();
+
+    // console.log("ugly", departments)
+    console.log("clean", rows)
+    const organizedArr = [];
+    for(i=0; i<rows.length; i++) {
+        const newObj = {
+            name: rows[i].name,
+            value: rows[i].id
+        }
+        organizedArr.push(newObj)
+    }
+    console.log("organized", organizedArr)
+
     inquirer.prompt([
         {
             name: 'newRoleName',
@@ -155,17 +174,17 @@ function addRole() {
             name: 'roleDepartment',
             type: 'list',
             message: 'What department does this role fall under?',
-            choices: departments
+            choices: organizedArr
         }
     ]).then((answers) => {
         db.query(`INSERT INTO roles  (title, salary, department_id)
-        VALUES ('${answers.newRoleName})', (${answers.newRoleName}), (${answers.newRoleName})`, function (err, response) {
+        VALUES (?,?,?)`, [answers.newRoleName, answers.roleSalary, answers.roleDepartment],function (err, response) {
             if (err) {
                 console.log(err)
                 return
             }else {
-                roles.push(answers)
-                console.log(`Added ${newRoleName} into roles`)
+                // roles.push(answers)
+                console.log(`Added new role into roles`)
                 runPrgm() 
             }
         })
@@ -194,17 +213,19 @@ function addDep() {
         }
     ]).then((answers) => {
         db.query(`INSERT INTO departments (name) 
-        VALUES (${answers.newDep})`, function(err, response) {
+        VALUES (?)`,[answers.newDep] ,function(err, response) {
             if (err) {
                 console.log(err)
                 return
             }else {
-                departments.push(answers.newDep)
-                console.log(departments)
-                console.log(`Added ${answers.newDep} to Departments database`)
+                // departments.push(answers.newDep)
+                // console.log(departments)
+                console.log(`Addeda new Department to database`)
+                runPrgm()
             }
         })
     })
 }
 
 
+runPrgm()
