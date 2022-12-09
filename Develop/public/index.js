@@ -104,7 +104,7 @@ async function addEmp() {
             name: 'empBoss',
             type: 'list',
             message: "Who is this employee's boss",
-            choices: 'none' + employees
+            choices: ['null', ...employees]
         }
     ]).then((answers) => {
         console.log(employees)
