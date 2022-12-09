@@ -1,8 +1,6 @@
 const inquirer = require('inquirer')
 const mysql = require('mysql2')
-const employees = []
-const roles = []
-const departments = []
+
 
 
 var db = mysql.createConnection({
@@ -60,12 +58,31 @@ function viewEmp() {
         }else {
             console.log('This is all of the employees currently in the database')
             console.table(results)
-            employees.push(results)
             runPrgm()
         }})
     }
     
-function addEmp() {
+async function addEmp() {
+    const [rows] = await loadRoles();
+    const roles = [];
+    for(i=0; i<rows.length; i++) {
+        const newObj = {
+            name: rows[i].title,
+            value: rows[i].id
+        }
+        roles.push(newObj)
+    }
+
+    const [row] = await loadEmp();
+    const employees = [];
+    for(i=0; i<row.length; i++) {
+        const newObj = {
+            name: row[i].first_name + ' '+ row[i].last_name,
+            value: row[i].id
+        }
+        employees.push(newObj)
+    }
+
     inquirer.prompt([
         {
             name: 'newEmpFirstName',
@@ -87,7 +104,7 @@ function addEmp() {
             name: 'empBoss',
             type: 'list',
             message: "Who is this employee's boss",
-            choices: employees
+            choices: 'none' + employees
         }
     ]).then((answers) => {
         console.log(employees)
@@ -104,132 +121,154 @@ function addEmp() {
     })}
 
     
-//     async function updateEmpRole() {
-//         let employees = viewEmp();
-//         let roles = viewRoles();
-//     inquirer.prompt([
-//         {
-//             name: 'updateEmpName',
-//             type: 'list',
-//             choices: employees,
-//             message: 'Which Employee do you want to update?'
-//         },
-//         {
-//             name: 'updateEmpRole',
-//             type: 'list',
-//             message: 'What role should be assigned to this employee?',
-//             choices: roles,
-//         }
-//     ]).then((answers) => {
-//         db.query(`UPDATE employees SET role_id = '${answers.updateEmpRole}' WHERE id = '${updateEmpName}'`,function(err,response) {
-//             if (err) {
-//                 console.log(err)
-//             }else {
-//                 console.log('Employee role updated!')
-//             }
-//         })
-//     })
-// }
+async function updateEmpRole() {
+    const [row] = await loadEmp();
+  
+    const employees = [];
+    for(i=0; i<row.length; i++) {
+        const newObj = {
+            name: row[i].first_name + ' ' + row[i].last_name,
+            value: row[i].id
+        }
+        employees.push(newObj)
+    }
 
-// function viewRoles() {
-//     db.query('SELECT * FROM roles', function(err, results) {
-//         if (err) {
-//             console.log('error fulfilling')
-//             return
-//         }else {
-//             console.log(`This is all of the roles currently available`)
-//             console.table(results)
-//             runPrgm()
-//         }})
-// }
+    const [rows] = await loadRoles();
+    const roles = [];
+    for(i=0; i<rows.length; i++) {
+        const newObj = {
+            name: rows[i].title,
+            value: rows[i].id
+        }
+        roles.push(newObj)
+    }
+    inquirer.prompt([
+        {
+            name: 'updateEmpName',
+            type: 'list',
+            choices: employees,
+            message: 'Which Employee do you want to update?'
+        },
+        {
+            name: 'updateEmpRole',
+            type: 'list',
+            message: 'What role should be assigned to this employee?',
+            choices: roles,
+        }
+    ]).then((answers) => {
+        db.query(`UPDATE employees SET role_id = '${answers.updateEmpRole}' WHERE id = '${answers.updateEmpName}'`,function(err,response) {
+            if (err) {
+                console.log(err)
+            }else {
+                console.log('Employee role updated!')
+                runPrgm();
+            }
+        })
+    })
+}
 
-// function loadDepartments() {
-//     return db.promise().query('SELECT * FROM departments');
-// }
+function viewRoles() {
+    db.query('SELECT * FROM roles', function(err, results) {
+        if (err) {
+            console.log('error fulfilling')
+            return
+        }else {
+            console.log(`This is all of the roles currently available`)
+            console.table(results)
+            runPrgm()
+        }})
+}
 
-// async function addRole() {
-//     const [rows] = await loadDepartments();
-//     // const departments = await loadDepartments();
+function loadEmp() {
+    return db.promise().query('SELECT * FROM employees')
+}
+function loadRoles() {
+    return db.promise().query('SELECT * FROM roles')
+}
+function loadDepartments() {
+    return db.promise().query('SELECT * FROM departments');
+}
 
-//     // console.log("ugly", departments)
-//     console.log("clean", rows)
-//     const organizedArr = [];
-//     for(i=0; i<rows.length; i++) {
-//         const newObj = {
-//             name: rows[i].name,
-//             value: rows[i].id
-//         }
-//         organizedArr.push(newObj)
-//     }
-//     console.log("organized", organizedArr)
+async function addRole() {
+    const [rows] = await loadDepartments();
 
-//     inquirer.prompt([
-//         {
-//             name: 'newRoleName',
-//             type: 'input',
-//             message: 'What is the new role called?',          
-//         },
-//         {
-//             name: 'roleSalary',
-//             type: 'input',
-//             message: 'What is the salary for this job?',
-//         },
-//         {
-//             name: 'roleDepartment',
-//             type: 'list',
-//             message: 'What department does this role fall under?',
-//             choices: organizedArr
-//         }
-//     ]).then((answers) => {
-//         db.query(`INSERT INTO roles  (title, salary, department_id)
-//         VALUES (?,?,?)`, [answers.newRoleName, answers.roleSalary, answers.roleDepartment],function (err, response) {
-//             if (err) {
-//                 console.log(err)
-//                 return
-//             }else {
-//                 // roles.push(answers)
-//                 console.log(`Added new role into roles`)
-//                 runPrgm() 
-//             }
-//         })
-//     })
-// }
+    const organizedArr = [];
+    for(i=0; i<rows.length; i++) {
+        const newObj = {
+            name: rows[i].name,
+            value: rows[i].id
+        }
+        organizedArr.push(newObj)
+    }
 
-// function viewDep() {
-//     db.query('SELECT * FROM departments', function (err,results) {
-//         if (err) {
-//             console.log(err)
-//             return
-//         }else {
-//             console.log(`This is all of the departments currently available`)
-//             console.table(results)
-//             runPrgm()
-//         }
-//     })
-// }
 
-// function addDep() {
-//     inquirer.prompt([
-//         {
-//             name: 'newDep',
-//             type: 'input',
-//             message: 'What is the name of the Department to be added?'
-//         }
-//     ]).then((answers) => {
-//         db.query(`INSERT INTO departments (name) 
-//         VALUES (?)`,[answers.newDep] ,function(err, response) {
-//             if (err) {
-//                 console.log(err)
-//                 return
-//             }else {
-//                 // departments.push(answers.newDep)
-//                 // console.log(departments)
-//                 console.log(`Addeda new Department to database`)
-//                 runPrgm()
-//             }
-//         })
-//     })
-// }
+    inquirer.prompt([
+        {
+            name: 'newRoleName',
+            type: 'input',
+            message: 'What is the new role called?',          
+        },
+        {
+            name: 'roleSalary',
+            type: 'input',
+            message: 'What is the salary for this job?',
+        },
+        {
+            name: 'roleDepartment',
+            type: 'list',
+            message: 'What department does this role fall under?',
+            choices: organizedArr
+        }
+    ]).then((answers) => {
+        db.query(`INSERT INTO roles  (title, salary, department_id)
+        VALUES (?,?,?)`, [answers.newRoleName, answers.roleSalary, answers.roleDepartment],function (err, response) {
+            if (err) {
+                console.log(err)
+                return
+            }else {
+                // roles.push(answers)
+                console.log(`Added new role into roles`)
+                runPrgm() 
+            }
+        })
+    })
+}
+
+function viewDep() {
+    db.query('SELECT * FROM departments', function (err,results) {
+        if (err) {
+            console.log(err)
+            return
+        }else {
+            console.log(`This is all of the departments currently available`)
+            console.table(results)
+            runPrgm()
+        }
+    })
+}
+
+function addDep() {
+    inquirer.prompt([
+        {
+            name: 'newDep',
+            type: 'input',
+            message: 'What is the name of the Department to be added?'
+        }
+    ]).then((answers) => {
+        db.query(`INSERT INTO departments (name) 
+        VALUES (?)`,[answers.newDep] ,function(err, response) {
+            if (err) {
+                console.log(err)
+                return
+            }else {
+                // departments.push(answers.newDep)
+                // console.log(departments)
+                console.log(`Addeda new Department to database`)
+                runPrgm()
+            }
+        })
+    })
+}
 
 
 runPrgm()
