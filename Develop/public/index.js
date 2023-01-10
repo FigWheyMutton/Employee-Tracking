@@ -75,12 +75,15 @@ async function addEmp() {
 
     const [row] = await loadEmp();
     const employees = [];
+    const none = 'none';
+    employees.push(none)
     for(i=0; i<row.length; i++) {
-        const newObj = {
+        const newEmpObj = {
             name: row[i].first_name + ' '+ row[i].last_name,
             value: row[i].id
         }
-        employees.push(newObj)
+        employees.push(newEmpObj)
+        console.log(employees)
     }
 
     inquirer.prompt([
@@ -104,21 +107,34 @@ async function addEmp() {
             name: 'empBoss',
             type: 'list',
             message: "Who is this employee's boss",
-            choices: ['null', ...employees]
-        }
+            choices: employees,
+        },
     ]).then((answers) => {
-        console.log(employees)
-        db.query(`INSERT INTO employees (first_name, last_name,role_id, manager_id) VALUE ('${answers.newEmpFirstName}', '${answers.newEmpLastName}', '${answers.newEmpRole}', '${answers.empBoss}')`, 
-        function (err,response) {
-            if (err) {
-                console.log(err)
-            }else {
-                console.log('Added employee to database!')
-                employees.push(answers)
-                runPrgm()
-            }
-        })
-    })}
+        if (answers.empBoss === 'none') {
+                        db.query(`INSERT INTO employees (first_name, last_name,role_id) VALUES ('${answers.newEmpFirstName}', '${answers.newEmpLastName}', '${answers.newEmpRole}')`, 
+            function (err,response) {
+                if (err) {
+                    console.log(err)
+                }else {
+                    console.log('Added employee to database!')
+                    runPrgm()
+                }
+            })
+        } else {
+            db.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ('${answers.newEmpFirstName}', '${answers.newEmpLastName}', '${answers.newEmpRole}', '${answers.empBoss}')`,
+            function (err,res) {
+                if(err) {
+                    console.log(err)
+                } else {
+                    console.log('Added employee to database')
+
+                }
+            })
+        }
+    }
+    ) 
+}      
+    
 
     
 async function updateEmpRole() {
@@ -131,6 +147,7 @@ async function updateEmpRole() {
             value: row[i].id
         }
         employees.push(newObj)
+        console.log(employees)
     }
 
     const [rows] = await loadRoles();
