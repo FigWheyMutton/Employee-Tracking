@@ -1,6 +1,6 @@
 # Employee-Tracking
  
-![Eclipse Public License](https://img.shields.io/badge/License-EPL_1.0-red.svg)
+
 ## Employee Tracking 
     
 ## Description
